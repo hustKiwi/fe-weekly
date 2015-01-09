@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>如何做好前端架构 by hustKiwi</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>如何做好前端架构</h1>
+        <p>以New FM实战为例</p>
+        <p class="view"><a href="https://github.com/hustKiwi/fe-weekly">View the Project on GitHub <small>hustKiwi/fe-weekly</small></a></p>
+        <ul>
+          <li><a href="https://github.com/hustKiwi/fe-weekly/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/hustKiwi/fe-weekly/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/hustKiwi/fe-weekly">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h3>
+<a id="确定基础依赖" class="anchor" href="#%E7%A1%AE%E5%AE%9A%E5%9F%BA%E7%A1%80%E4%BE%9D%E8%B5%96" aria-hidden="true"><span class="octicon octicon-link"></span></a>确定基础依赖</h3>
+
+<ul>
+<li>requirejs的AMD（异步模块依赖）</li>
+<li>coffee &amp; stylus</li>
+<li>backbone &amp; backbone layoutmanager</li>
+<li>api &amp; proxy</li>
+</ul>
+
+<h3>
+<a id="规划目录结构" class="anchor" href="#%E8%A7%84%E5%88%92%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84" aria-hidden="true"><span class="octicon octicon-link"></span></a>规划目录结构</h3>
+
+<div class="highlight highlight-shell"><pre>src_root
+├── package.json
+├── bower.json
+├── coffeelint.json
+├── nobone_sync_cfg.coffee
+├── Cakefile
+├── tpl/
+│   ├── index.tpl.html
+│   ├── <span class="pl-s3">bg</span>.tpl.html
+│   ├── layout.tpl.html
+├── static/
+    ├── js/
+    │   ├── main.coffee
+    │   ├── core/
+    │   │   ├── cfg.coffee
+    │   │   ├── backbone_init.coffee
+    │   │   ├── utils.coffee
+    │   ├── module/
+    │   │   ├── channels.coffee
+    │   ├── view/
+    │   │   ├── channels.coffee
+    │   ├── lib/
+    │   │   ├── bower/
+    │   │   ├── require.js
+    ├── css/
+    │   ├── main.styl
+    │   ├── core/
+    │   │   ├── base.styl
+    │   │   ├── const.styl
+    │   │   ├── layout.styl
+    │   │   ├── mixin.styl
+    │   ├── view/
+    │   │   ├── channels.styl
+    │   ├── ui/
+    │   │   ├── pager.styl 
+    ├── img/</pre></div>
+
+<h3>
+<a id="构建编译方法" class="anchor" href="#%E6%9E%84%E5%BB%BA%E7%BC%96%E8%AF%91%E6%96%B9%E6%B3%95" aria-hidden="true"><span class="octicon octicon-link"></span></a>构建编译方法</h3>
+
+<ul>
+<li>基于 <code>nobone</code> 构建 coffee &amp; stylus renderer</li>
+<li>使用cake构建命令行任务</li>
+</ul>
+
+<div class="highlight highlight-shell"><pre>➜  mbox git:(new-fm) cake
+Cakefile defines the following tasks:
+
+cake setup                <span class="pl-c"># Setup</span>
+cake sync                 <span class="pl-c"># Run nobone sync</span>
+cake proxy                <span class="pl-c"># Run API proxy</span>
+cake dev                  <span class="pl-c"># Run dev tools</span>
+
+      --sync-off     Disable the nobone sync.
+      --proxy-off    Disable proxy.
+
+➜  mbox git:(new-fm) cake dev
+[2015-01-09 10:02:42] <span class="pl-k">&gt;&gt;</span> Listen: 8813 0ms
+[2015-01-09 10:02:43] Watched: 1990 0ms</pre></div>
+
+<h3>
+<a id="跑通基础页面" class="anchor" href="#%E8%B7%91%E9%80%9A%E5%9F%BA%E7%A1%80%E9%A1%B5%E9%9D%A2" aria-hidden="true"><span class="octicon octicon-link"></span></a>跑通基础页面</h3>
+
+<p>重在验证编译和配置，能得到从数据获取到页面渲染的hello world级页面即可。</p>
+
+<h3>
+<a id="代码重构优化" class="anchor" href="#%E4%BB%A3%E7%A0%81%E9%87%8D%E6%9E%84%E4%BC%98%E5%8C%96" aria-hidden="true"><span class="octicon octicon-link"></span></a>代码重构优化</h3>
+
+<h4>
+<a id="提炼通用方法" class="anchor" href="#%E6%8F%90%E7%82%BC%E9%80%9A%E7%94%A8%E6%96%B9%E6%B3%95" aria-hidden="true"><span class="octicon octicon-link"></span></a>提炼通用方法</h4>
+
+<div class="highlight highlight-coffee"><pre><span class="pl-v"><span class="pl-v">utils <span class="pl-k">=</span></span></span>
+    <span class="pl-en">api</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(url, data, options)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-v"><span class="pl-v">def <span class="pl-k">=</span></span></span> $.Deferred()
+        <span class="pl-v"><span class="pl-v">defaults <span class="pl-k">=</span></span></span>
+            <span class="pl-v"><span class="pl-v">api_url:</span></span> <span class="pl-s1"><span class="pl-pds">'</span>/dev/api/?tn={{method}}<span class="pl-pds">'</span></span>
+            <span class="pl-v"><span class="pl-v">type:</span></span> <span class="pl-s1"><span class="pl-pds">'</span>GET<span class="pl-pds">'</span></span>
+            <span class="pl-v"><span class="pl-v">data_type:</span></span> <span class="pl-s1"><span class="pl-pds">'</span>json<span class="pl-pds">'</span></span>
+            <span class="pl-v"><span class="pl-v">processData:</span></span> <span class="pl-c1">false</span>
+            <span class="pl-en">handle_err</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(r)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+                <span class="pl-en">console</span><span class="pl-k">?</span>.error(r)
+        <span class="pl-v"><span class="pl-v">opts <span class="pl-k">=</span></span></span> _.merge defaults, options
+
+        <span class="pl-en">getUrl </span><span class="pl-k">=</span><span class="pl-vpf"> <span class="pl-vpf">(method)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+            <span class="pl-k">return</span> method <span class="pl-k">if</span> method.startsWith(<span class="pl-s1"><span class="pl-pds">'</span>/<span class="pl-pds">'</span></span>)
+            opts.api_url.replace(<span class="pl-s1"><span class="pl-pds">'</span>{{method}}<span class="pl-pds">'</span></span>, method)
+
+        <span class="pl-k">if</span> _.isArray(url)
+            <span class="pl-v"><span class="pl-v">exec <span class="pl-k">=</span></span></span> _.<span class="pl-s3">map</span>(url, <span class="pl-vpf">(url)</span> <span class="pl-st">-&gt;</span>
+                utils.api(url)
+            )
+            <span class="pl-k">return</span> $.when.<span class="pl-s3">apply</span>(utils, exec)
+
+        <span class="pl-k">if</span> _.isObject(url)
+            <span class="pl-v"><span class="pl-v">options <span class="pl-k">=</span></span></span> data
+            <span class="pl-v"><span class="pl-v">data <span class="pl-k">=</span></span></span> url.data
+            <span class="pl-v"><span class="pl-v">url <span class="pl-k">=</span></span></span> url.url
+
+        <span class="pl-v"><span class="pl-v">data <span class="pl-k">or=</span></span></span> {}
+        <span class="pl-v"><span class="pl-v">data.hashcode <span class="pl-k">=</span></span></span> App.hash_code <span class="pl-k">or</span> <span class="pl-s1"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>
+
+        $.ajax
+            <span class="pl-v"><span class="pl-v">url:</span></span> getUrl(url)
+            <span class="pl-v"><span class="pl-v">data:</span></span> data <span class="pl-k">or</span> {}
+            <span class="pl-v"><span class="pl-v">dataType:</span></span> opts.data_type
+            <span class="pl-v"><span class="pl-v">type:</span></span> opts.type
+
+            <span class="pl-en">success</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(r)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+                <span class="pl-k">if</span> r.errorCode <span class="pl-k">is</span> <span class="pl-c1">22000</span>
+                    <span class="pl-k">return</span> def.resolve(r.data)
+
+                <span class="pl-k">{</span> <span class="pl-v"><span class="pl-v">status</span></span>, <span class="pl-v"><span class="pl-v">hash_code</span></span> <span class="pl-k">} =</span> r
+
+                <span class="pl-k">if</span> status <span class="pl-k">is</span> <span class="pl-c1">0</span>
+                    <span class="pl-v"><span class="pl-v">App.hash_code <span class="pl-k">=</span></span></span> hash_code <span class="pl-k">if</span> hash_code
+                    <span class="pl-k">return</span> def.resolve(r)
+
+                opts.handle_err(r)
+                def.reject(r)
+
+            <span class="pl-en">error</span><span class="pl-k">:</span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+                def.reject(<span class="pl-s1"><span class="pl-pds">'</span>ajax error<span class="pl-pds">'</span></span>)
+                opts.handle_err(<span class="pl-s1"><span class="pl-pds">'</span>ajax error<span class="pl-pds">'</span></span>)
+
+        def.promise()
+
+    <span class="pl-en">fetch_tmpl</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(name, done)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-v"><span class="pl-v">url <span class="pl-k">=</span></span></span> <span class="pl-s1"><span class="pl-pds">'</span>tmpl/<span class="pl-pds">'</span></span> <span class="pl-k">+</span> name
+        <span class="pl-v"><span class="pl-v">def <span class="pl-k">=</span></span></span> $.Deferred()
+        <span class="pl-v"><span class="pl-v">JST <span class="pl-k">=</span></span></span> <span class="pl-v"><span class="pl-v">window.JST <span class="pl-k">or=</span></span></span> {}
+
+        <span class="pl-v"><span class="pl-v">done <span class="pl-k">=</span></span></span> done <span class="pl-k">or</span> def.resolve
+        <span class="pl-k">if</span> JST[url]
+            done(JST[url])
+        <span class="pl-k">else</span>
+            <span class="pl-s3">require</span> [url], <span class="pl-vpf">(tmpl)</span> <span class="pl-st">-&gt;</span>
+                <span class="pl-s3">window</span>.JST[url] <span class="pl-k">=</span> tmpl
+                done(tmpl)
+
+        def.promise()</pre></div>
+
+<pre lang="stylus"><code>icon($icon, $width, $height = $width)
+    inline-block()
+    size($width, $height)
+    text-indent: -999em
+    overflow: hidden
+    background: url($img_path + $icon + '.png') no-repeat 0 0
+    pngfix($icon)
+</code></pre>
+
+<h4>
+<a id="抽象复用结构" class="anchor" href="#%E6%8A%BD%E8%B1%A1%E5%A4%8D%E7%94%A8%E7%BB%93%E6%9E%84" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象复用结构</h4>
+
+<div class="highlight highlight-coffee"><pre>Backbone.Layout.configure({
+    <span class="pl-v"><span class="pl-v">manage:</span></span> <span class="pl-c1">true</span>
+    <span class="pl-en">fetchTemplate</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(name)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        utils.fetch_tmpl(name, <span class="pl-vo">@async</span>())
+})
+
+<span class="pl-v"><span class="pl-v">mixins <span class="pl-k">=</span></span></span> <span class="pl-k">do</span> <span class="pl-st">-&gt;</span>
+    <span class="pl-en">fetch </span><span class="pl-k">=</span><span class="pl-vpf"> <span class="pl-vpf">(args)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-v"><span class="pl-v">def <span class="pl-k">=</span></span></span> $.Deferred()
+        <span class="pl-en">done </span><span class="pl-k">=</span><span class="pl-vpf"> <span class="pl-vpf">(r...)</span></span> <span class="pl-st"><span class="pl-st">=&gt;</span></span>
+            <span class="pl-v"><span class="pl-v">r <span class="pl-k">=</span></span></span> r[<span class="pl-c1">0</span>] <span class="pl-k">if</span> r.length <span class="pl-k">is</span> <span class="pl-c1">1</span>
+            <span class="pl-k">if</span> <span class="pl-vo">@_format</span>
+                <span class="pl-v"><span class="pl-v">r <span class="pl-k">=</span></span></span> <span class="pl-vo">@_format</span>(r)
+            def.resolve(r)
+        <span class="pl-en">fail </span><span class="pl-k">=</span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+            def.reject()
+
+        <span class="pl-k">if</span> <span class="pl-vo">@_api</span>
+            utils.api(_.merge <span class="pl-vo">@_api</span>, args).done(done).fail(fail)
+
+        def.promise()
+    <span class="pl-st">-&gt;</span>
+        <span class="pl-vo">@fetch</span> <span class="pl-k">=</span> fetch
+
+mixins.<span class="pl-s3">call</span> Model<span class="pl-k">::</span>
+mixins.<span class="pl-s3">call</span> Collection<span class="pl-k">::</span>
+
+_.extend View<span class="pl-k">::</span>, {
+    <span class="pl-en">initialize</span><span class="pl-k">:</span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-k">if</span> <span class="pl-vo">@model</span>
+            <span class="pl-vo">@listenTo</span>(<span class="pl-vo">@model</span>, <span class="pl-s1"><span class="pl-pds">'</span>change<span class="pl-pds">'</span></span>, <span class="pl-vo">@render</span>)
+}</pre></div>
+
+<h4>
+<a id="总结优秀实践" class="anchor" href="#%E6%80%BB%E7%BB%93%E4%BC%98%E7%A7%80%E5%AE%9E%E8%B7%B5" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结优秀实践</h4>
+
+<div class="highlight highlight-coffee"><pre>_.extend App, {
+    <span class="pl-en">create_module</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(options)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        $.extend(<span class="pl-c1">true</span>, {
+            <span class="pl-v"><span class="pl-v">Models:</span></span> {}
+            <span class="pl-v"><span class="pl-v">Views:</span></span> {}
+        }, options)
+
+    <span class="pl-en">init_module</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(name, options)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-v"><span class="pl-v">defaults <span class="pl-k">=</span></span></span>
+            <span class="pl-v"><span class="pl-v">args:</span></span> []
+            <span class="pl-v"><span class="pl-v">need_css:</span></span> <span class="pl-c1">true</span>
+        <span class="pl-v"><span class="pl-v">opts <span class="pl-k">=</span></span></span> _.merge defaults, options
+
+        <span class="pl-v"><span class="pl-v">deps <span class="pl-k">=</span></span></span> [
+            <span class="pl-s1"><span class="pl-pds">"</span>coffee/module/<span class="pl-s2"><span class="pl-pse">#{</span>name<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+        ]
+        <span class="pl-k">if</span> opts.need_css
+            deps.<span class="pl-s3">push</span> <span class="pl-s1"><span class="pl-pds">"</span>css!styl/view/<span class="pl-s2"><span class="pl-pse">#{</span>name<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+
+        <span class="pl-s3">require</span> deps, <span class="pl-vpf">(mod)</span> <span class="pl-st">-&gt;</span>
+            mod.initialize.<span class="pl-s3">apply</span>(<span class="pl-c1">null</span>, opts.args)
+}</pre></div>
+
+<div class="highlight highlight-coffee"><pre>define [
+    <span class="pl-s1"><span class="pl-pds">'</span>coffee/view/channels<span class="pl-pds">'</span></span>
+], <span class="pl-vpf">(Views)</span> <span class="pl-st">-&gt;</span>
+    <span class="pl-v"><span class="pl-v">Module <span class="pl-k">=</span></span></span> App.create_module({
+        <span class="pl-v"><span class="pl-v">Views:</span></span> Views
+    })
+
+    <span class="pl-v"><span class="pl-v">Module.Models.Main <span class="pl-k">=</span></span></span> <span class="pl-v"><span class="pl-v">Main <span class="pl-k">=</span></span></span> Backbone.Model.extend({
+        <span class="pl-v"><span class="pl-v">_api:</span></span>
+            <span class="pl-v"><span class="pl-v">url:</span></span> <span class="pl-s1"><span class="pl-pds">'</span>channellist<span class="pl-pds">'</span></span>
+
+        <span class="pl-en">_format</span><span class="pl-k">:</span><span class="pl-vpf"> <span class="pl-vpf">(data)</span></span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+            <span class="pl-v"><span class="pl-v">group_channels <span class="pl-k">=</span></span></span> _.groupBy data.channel_list, <span class="pl-vpf">(c)</span> <span class="pl-st">-&gt;</span>
+                c.cate_order
+
+            <span class="pl-v"><span class="pl-v">channels <span class="pl-k">=</span></span></span> []
+            <span class="pl-v"><span class="pl-v">cate_order <span class="pl-k">=</span></span></span> _.sortBy(_.keys group_channels)
+
+            <span class="pl-k">for</span> cate <span class="pl-k">in</span> cate_order
+                <span class="pl-v"><span class="pl-v">c <span class="pl-k">=</span></span></span> group_channels[cate]
+                channels.<span class="pl-s3">push</span>(_.sortBy c, <span class="pl-vpf">(item)</span> <span class="pl-st">-&gt;</span>
+                    item.pv_order
+                )
+
+            {
+                <span class="pl-v"><span class="pl-v">cur_type:</span></span> fmListModel.getCurType()
+                <span class="pl-v"><span class="pl-v">channels:</span></span> channels
+            }
+    })
+
+    <span class="pl-en">Module.initialize </span><span class="pl-k">=</span> <span class="pl-st"><span class="pl-st">-&gt;</span></span>
+        <span class="pl-v"><span class="pl-v">main <span class="pl-k">=</span></span></span> <span class="pl-k">new</span> <span class="pl-en">Main</span>()
+        <span class="pl-v"><span class="pl-v">mainView <span class="pl-k">=</span></span></span> <span class="pl-k">new</span> <span class="pl-en">Views.Main</span>({
+            <span class="pl-v"><span class="pl-v">model:</span></span> main
+        })
+
+        App.use_layout().then <span class="pl-st">-&gt;</span>
+            App.layout.setView(<span class="pl-s1"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>, mainView)
+            main.fetch().done <span class="pl-vpf">(r)</span> <span class="pl-st">-&gt;</span>
+                main.set(r)
+
+    Module</pre></div>
+
+<h4>
+<a id="配置化工具化自动化" class="anchor" href="#%E9%85%8D%E7%BD%AE%E5%8C%96%E5%B7%A5%E5%85%B7%E5%8C%96%E8%87%AA%E5%8A%A8%E5%8C%96" aria-hidden="true"><span class="octicon octicon-link"></span></a>配置化、工具化、自动化</h4>
+
+<p>例如：通过 <code>yeoman</code> 构建脚手架脚本；实现工具解决代码同步、合图等问题（ <code>nobone-sync</code> 和 <code>imerge</code> ）</p>
+
+<h4>
+<a id="与业务解构形成独立框架--工具" class="anchor" href="#%E4%B8%8E%E4%B8%9A%E5%8A%A1%E8%A7%A3%E6%9E%84%E5%BD%A2%E6%88%90%E7%8B%AC%E7%AB%8B%E6%A1%86%E6%9E%B6--%E5%B7%A5%E5%85%B7" aria-hidden="true"><span class="octicon octicon-link"></span></a>与业务解构，形成独立框架 / 工具</h4>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/hustKiwi">hustKiwi</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
